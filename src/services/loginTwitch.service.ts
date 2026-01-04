@@ -9,7 +9,11 @@ export async function loginTwitchService(code: string) {
   console.log("twitchUser: ", twitchUser)
   const user = await prisma.user.upsert({
     where: { twitchId: twitchUser.id },
-    update: {},
+    update: {
+      username: twitchUser.login,
+      avatar: twitchUser.profile_image_url ?? null,
+      email: twitchUser.email ?? null,
+    },
     create: {
       twitchId: twitchUser.id,
       username: twitchUser.login,
@@ -17,12 +21,28 @@ export async function loginTwitchService(code: string) {
       avatar: twitchUser.profile_image_url ?? null,
     },
   });
+
   console.log("user: ", user)
+  await prisma.twitchToken.upsert({
+    where: { userId: user.id },
+    update: {
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      expiresAt: new Date(Date.now() + expires_in * 1000),
+    },
+    create: {
+      userId: user.id,
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      expiresAt: new Date(Date.now() + expires_in * 1000),
+    },
+  })
+  
   const log = await prisma.loginHistory.create({
     data: {
       userId: user.id,
     },
   });
   console.log("log: ", log)
-  return user;
+  
 }

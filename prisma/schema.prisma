@@ -17,6 +17,8 @@ model User {
   createdAt DateTime @default(now())
 
   logins    LoginHistory[]
+  chatPresences ChatPresence[]
+  twitchToken   TwitchToken?
 }
 
 model LoginHistory {
