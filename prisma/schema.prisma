@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  twitchId  String   @unique
+  username  String
+  email     String?
+  avatar    String?
+
+  createdAt DateTime @default(now())
+
+  logins    LoginHistory[]
+}
+
+model LoginHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  loggedAt  DateTime @default(now())
+  ip        String?  // opcional
+  userAgent String? // opcional
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model ChatPresence {
+  id        String   @id @default(cuid())
+  userId    String
+  channel   String
+
+  firstSeen DateTime
+  lastSeen  DateTime
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, channel])
+  @@index([channel])
+}
+
+model TwitchToken {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
