@@ -1,5 +1,6 @@
 import axios from "axios";
 import prisma from "../lib/prisma.js";
+import { getValidBotToken } from "../services/botToken.service.js"
 
 const CHANNEL_LOGIN = "aninhacattv";
 
@@ -9,6 +10,8 @@ export function startChatPolling() {
 
 async function pollChatters() {
   try {
+    const accessToken = await getValidBotToken()
+
     const res = await axios.get(
       "https://api.twitch.tv/helix/chat/chatters",
       {
@@ -18,7 +21,7 @@ async function pollChatters() {
           first: 1000,
         },
         headers: {
-          Authorization: `Bearer ${process.env.BOT_ACCESS_TOKEN}`,
+          Authorization: `Bearer ${accessToken}`,
           "Client-Id": process.env.TWITCH_CLIENT_ID!,
         },
       }
@@ -26,12 +29,28 @@ async function pollChatters() {
 
     const now = new Date();
     const chatters = res.data.data;
-
+    console.log("chatters: ", chatters)
     for (const chatter of chatters) {
-      await prisma.chatPresence.upsert({
+    
+      let user = await prisma.user.findFirst({
         where: {
-          userLogin_channel: {
-            userLogin: chatter.user_login,
+          username: chatter.user_login,
+        },
+      })
+      console.log("user: ", user)
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            twitchId: chatter.user_id, // vem da API
+            username: chatter.user_login,
+          },
+        })
+      }
+
+      const chartPresence = await prisma.chatPresence.upsert({
+        where: {
+          userId_channel: {
+            userId: user.id,
             channel: CHANNEL_LOGIN,
           },
         },
@@ -39,16 +58,17 @@ async function pollChatters() {
           lastSeen: now,
         },
         create: {
-          userLogin: chatter.user_login,
+          userId: user.id,
           channel: CHANNEL_LOGIN,
           firstSeen: now,
           lastSeen: now,
         },
-      });
+      })
+      console.log("chartPresence: ", chartPresence)
     }
 
-    console.log(`📊 Chat atualizado (${chatters.length})`);
+    console.log(`📊 Chat atualizado (${chatters.length})`)
   } catch (err) {
-    console.error("Erro no polling do chat", err);
+    console.error("Erro no polling do chat", err)
   }
 }

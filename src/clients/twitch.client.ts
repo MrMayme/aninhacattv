@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { TwitchUserDTO } from "../dtos/twitchUser.dto.js";
+import type { TwitchTokenResponse } from "../dtos/twitchToken.dto.js";
 
 export async function exchangeCodeForToken(code: string) {
   const response = await axios.post(
@@ -19,7 +20,7 @@ export async function exchangeCodeForToken(code: string) {
   return response.data;
 }
 
-export async function refreshTwitchToken(refreshToken: string): Promise<string> {
+export async function refreshTwitchToken(refreshToken: string): Promise<TwitchTokenResponse> {
   const response = await axios.post(
     "https://id.twitch.tv/oauth2/token",
     null,
