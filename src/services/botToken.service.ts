@@ -41,7 +41,7 @@ async function refreshWithRetry(userId: string, refreshToken: string, attempt = 
 export async function getValidBotToken(): Promise<string> {
 
   const botUsername = process.env.BOT_USERNAME
-  
+  console.log("botUsername: ", botUsername)
   if (!botUsername) {
     throw new Error("BOT_USERNAME não definido")
   }
@@ -50,14 +50,15 @@ export async function getValidBotToken(): Promise<string> {
     where: { username: botUsername },
     include: { twitchToken: true },
   })
-
+  console.log("bot: ", bot)
   if (!bot || !bot.twitchToken) {
     throw new Error("BOT não autenticado")
   }
 
   const token = bot.twitchToken
+  console.log("token: ", token)
   const now = Date.now()
-
+  console.log("now: ", now)
   if (token.expiresAt.getTime() - now > EXPIRATION_MARGIN_MS) {
     return token.accessToken
   }

@@ -2,7 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
 import routes from "./routes/index.js";
-import { startChatPolling } from "./jobs/pollChatters.js";
+import { initChatPollingIfLive } from "./jobs/pollChatters.js";
 
 const app = express();
 
@@ -17,4 +17,6 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
-//startChatPolling()
+setInterval(() => {
+  initChatPollingIfLive()
+}, 60_000)

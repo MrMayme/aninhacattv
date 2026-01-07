@@ -1,8 +1,29 @@
 import axios from "axios";
 import prisma from "../lib/prisma.js";
+import { isChannelLive } from "../services/twitchStatus.service.js"
 import { getValidBotToken } from "../services/botToken.service.js"
 
 const CHANNEL_LOGIN = "aninhacattv";
+
+let pollingStarted = false
+
+export async function initChatPollingIfLive() {
+  const isLive = await isChannelLive(CHANNEL_LOGIN)
+  console.log("isLive: ", isLive)
+  console.log("1->pollingStarted: ", pollingStarted)
+  if (isLive && !pollingStarted) {
+    console.log("2->pollingStarted: ", pollingStarted)
+    console.log("🔴 Canal AO VIVO — iniciando chat polling")
+    startChatPolling()
+    pollingStarted = true
+  }
+  console.log("3->pollingStarted: ", pollingStarted)
+  if (!isLive && pollingStarted) {
+    console.log("4->pollingStarted: ", pollingStarted)
+    console.log("⚫ Canal OFFLINE — polling pausado")
+    pollingStarted = false
+  }
+}
 
 export function startChatPolling() {
   setInterval(pollChatters, 1 * 60_000); // 1 min
