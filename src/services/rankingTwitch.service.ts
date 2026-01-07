@@ -4,18 +4,17 @@ import type { RankingDTO } from "../dtos/ranking.dto.js";
 const MIN_MINUTES = 5;
 
 function calculateMinutes(first: Date, last: Date): number {
-  return Math.round(
-    (last.getTime() - first.getTime()) / 60000
-  );
+  const diff = last.getTime() - first.getTime();
+  return Math.max(0, Math.floor(diff / 60000));
 }
 
 function mapPresenceToRanking(p: {
-  userLogin: string;
+  user: { username: string };
   firstSeen: Date;
   lastSeen: Date;
 }): RankingDTO {
   return {
-    user: p.userLogin,
+    user: p.user.username,
     minutes: calculateMinutes(p.firstSeen, p.lastSeen),
   };
 }
@@ -31,6 +30,13 @@ function sortByMinutesDesc(a: RankingDTO, b: RankingDTO) {
 export async function getTwitchRankingService(channel: string): Promise<RankingDTO[]> {
   const presences = await prisma.chatPresence.findMany({
     where: { channel },
+    include: {
+      user: {
+        select: {
+          username: true,
+        },
+      },
+    },
   });
 
   return presences
