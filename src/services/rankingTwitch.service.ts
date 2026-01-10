@@ -3,33 +3,21 @@ import type { RankingDTO } from "../dtos/ranking.dto.js";
 
 const MIN_MINUTES = 5;
 
-function calculateMinutes(first: Date, last: Date): number {
-  const diff = last.getTime() - first.getTime();
+function calculateMinutes(start: Date, end: Date): number {
+  const diff = end.getTime() - start.getTime();
   return Math.max(0, Math.floor(diff / 60000));
 }
 
-function mapPresenceToRanking(p: {
-  user: { username: string };
-  firstSeen: Date;
-  lastSeen: Date;
-}): RankingDTO {
-  return {
-    user: p.user.username,
-    minutes: calculateMinutes(p.firstSeen, p.lastSeen),
-  };
-}
-
-function hasMinimumTime(r: RankingDTO): boolean {
-  return r.minutes >= MIN_MINUTES;
-}
-
-function sortByMinutesDesc(a: RankingDTO, b: RankingDTO) {
-  return b.minutes - a.minutes;
-}
-
 export async function getTwitchRankingService(channel: string): Promise<RankingDTO[]> {
-  const presences = await prisma.chatPresence.findMany({
-    where: { channel },
+  const now = new Date();
+
+  /**
+   * 1️⃣ Buscar todas as sessões do canal
+   */
+  const sessions = await prisma.chatSession.findMany({
+    where: {
+      channel,
+    },
     include: {
       user: {
         select: {
@@ -39,10 +27,31 @@ export async function getTwitchRankingService(channel: string): Promise<RankingD
     },
   });
 
-  return presences
-    .map(mapPresenceToRanking)
-    .filter(hasMinimumTime)
-    .sort(sortByMinutesDesc);
+  /**
+   * 2️⃣ Somar minutos por usuário
+   */
+  const minutesByUser = new Map<string, number>();
+
+  for (const session of sessions) {
+    const end = session.endedAt ?? now;
+    const minutes = calculateMinutes(session.startedAt, end);
+
+    const current = minutesByUser.get(session.user.username) ?? 0;
+    minutesByUser.set(session.user.username, current + minutes);
+  }
+
+  /**
+   * 3️⃣ Converter para RankingDTO
+   */
+  const ranking: RankingDTO[] = Array.from(minutesByUser.entries())
+    .map(([user, minutes]) => ({
+      user,
+      minutes,
+    }))
+    .filter(r => r.minutes >= MIN_MINUTES)
+    .sort((a, b) => b.minutes - a.minutes);
+
+  return ranking;
 }
 
 /**

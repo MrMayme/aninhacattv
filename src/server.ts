@@ -19,4 +19,4 @@ app.listen(PORT, () => {
 
 setInterval(() => {
   initChatPollingIfLive()
-}, 60_000)
+}, 5 * 60_000)

@@ -16,9 +16,9 @@ model User {
 
   createdAt DateTime @default(now())
 
-  logins    LoginHistory[]
-  chatPresences ChatPresence[]
+  logins        LoginHistory[]
   twitchToken   TwitchToken?
+  chatSessions  ChatSession[]
 }
 
 model LoginHistory {
@@ -33,20 +33,6 @@ model LoginHistory {
   @@index([userId])
 }
 
-model ChatPresence {
-  id        String   @id @default(cuid())
-  userId    String
-  channel   String
-
-  firstSeen DateTime
-  lastSeen  DateTime
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@unique([userId, channel])
-  @@index([channel])
-}
-
 model TwitchToken {
   id           String   @id @default(cuid())
   userId       String   @unique
@@ -56,4 +42,19 @@ model TwitchToken {
   createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  userId    String
+  channel   String
+
+  startedAt DateTime
+  endedAt   DateTime? // null = sessão ativa
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([channel])
+  @@index([userId])
+  @@index([channel, endedAt])
 }

@@ -16,7 +16,7 @@ export async function exchangeCodeForToken(code: string) {
       },
     }
   );
-  console.log("response.data: ", response.data)
+  
   return response.data;
 }
 
@@ -33,7 +33,7 @@ export async function refreshTwitchToken(refreshToken: string): Promise<TwitchTo
       },
     }
   );
-  console.log("response.data: ", response.data)
+  
   return response.data
 }
 

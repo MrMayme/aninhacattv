@@ -5,33 +5,66 @@ import { getValidBotToken } from "../services/botToken.service.js"
 
 const CHANNEL_LOGIN = "aninhacattv";
 
-let pollingStarted = false
+// 🔑 controle REAL do polling
+let chatPollingInterval: NodeJS.Timeout | null = null;
+
+// 🔒 evita overlap de execução
+let isPolling = false;
 
 export async function initChatPollingIfLive() {
-  const isLive = await isChannelLive(CHANNEL_LOGIN)
-  console.log("isLive: ", isLive)
-  console.log("1->pollingStarted: ", pollingStarted)
-  if (isLive && !pollingStarted) {
-    console.log("2->pollingStarted: ", pollingStarted)
-    console.log("🔴 Canal AO VIVO — iniciando chat polling")
-    startChatPolling()
-    pollingStarted = true
-  }
-  console.log("3->pollingStarted: ", pollingStarted)
-  if (!isLive && pollingStarted) {
-    console.log("4->pollingStarted: ", pollingStarted)
-    console.log("⚫ Canal OFFLINE — polling pausado")
-    pollingStarted = false
+  const isLive = await isChannelLive(CHANNEL_LOGIN);
+
+  if (isLive) {
+    startChatPolling();
+  } else {
+    await stopChatPolling();
   }
 }
 
-export function startChatPolling() {
-  setInterval(pollChatters, 1 * 60_000); // 1 min
+function startChatPolling() {
+  if (chatPollingInterval) return; // já está rodando
+
+  console.log("🔴 Canal AO VIVO — iniciando chat polling");
+
+  // 🚀 primeira execução imediata
+  pollChatters();
+
+  chatPollingInterval = setInterval(
+    pollChatters,
+    5 * 60_000 // 5 minutos
+  );
+}
+
+async function stopChatPolling() {
+  if (!chatPollingInterval) return;
+
+  console.log("⚫ Canal OFFLINE — polling pausado");
+
+  clearInterval(chatPollingInterval);
+  chatPollingInterval = null;
+
+  // 🔚 encerra todas as sessões abertas
+  await prisma.chatSession.updateMany({
+    where: {
+      channel: CHANNEL_LOGIN,
+      endedAt: null,
+    },
+    data: {
+      endedAt: new Date(),
+    },
+  });
 }
 
 async function pollChatters() {
+  if (isPolling) {
+    console.warn("⏳ Poll ainda em execução, pulando ciclo...");
+    return;
+  }
+
+  isPolling = true;
+
   try {
-    const accessToken = await getValidBotToken()
+    const accessToken = await getValidBotToken();
 
     const res = await axios.get(
       "https://api.twitch.tv/helix/chat/chatters",
@@ -50,46 +83,79 @@ async function pollChatters() {
 
     const now = new Date();
     const chatters = res.data.data;
-    console.log("chatters: ", chatters)
-    for (const chatter of chatters) {
-    
-      let user = await prisma.user.findFirst({
-        where: {
-          username: chatter.user_login,
-        },
-      })
-      console.log("user: ", user)
-      if (!user) {
-        user = await prisma.user.create({
-          data: {
-            twitchId: chatter.user_id, // vem da API
-            username: chatter.user_login,
-          },
-        })
-      }
 
-      const chartPresence = await prisma.chatPresence.upsert({
-        where: {
-          userId_channel: {
-            userId: user.id,
-            channel: CHANNEL_LOGIN,
+    /**
+     * 1️⃣ Quem está no chat agora
+     */
+    const currentLogins = new Set(
+      chatters.map((c: any) => c.user_login)
+    );
+
+    /**
+     * 2️⃣ Sessões ativas no banco
+     */
+    const activeSessions = await prisma.chatSession.findMany({
+      where: {
+        channel: CHANNEL_LOGIN,
+        endedAt: null,
+      },
+      include: {
+        user: {
+          select: {
+            username: true,
           },
         },
-        update: {
-          lastSeen: now,
-        },
-        create: {
-          userId: user.id,
-          channel: CHANNEL_LOGIN,
-          firstSeen: now,
-          lastSeen: now,
-        },
-      })
-      console.log("chartPresence: ", chartPresence)
+      },
+    });
+
+    const activeMap = new Map(
+      activeSessions.map(s => [s.user.username, s])
+    );
+
+    /**
+     * 3️⃣ Usuários que SAÍRAM do chat → fechar sessão
+     */
+    for (const session of activeSessions) {
+      if (!currentLogins.has(session.user.username)) {
+        await prisma.chatSession.update({
+          where: { id: session.id },
+          data: { endedAt: now },
+        });
+      }
     }
 
-    console.log(`📊 Chat atualizado (${chatters.length})`)
+    /**
+     * 4️⃣ Usuários que ENTRARAM no chat → nova sessão
+     */
+    for (const chatter of chatters) {
+      if (!activeMap.has(chatter.user_login)) {
+        const user = await prisma.user.upsert({
+          where: {
+            twitchId: chatter.user_id, // 🔑 fixo
+          },
+          update: {
+            username: chatter.user_login, // 🔄 atualiza se mudou
+          },
+          create: {
+            twitchId: chatter.user_id,
+            username: chatter.user_login,
+          },
+        });
+
+        await prisma.chatSession.create({
+          data: {
+            userId: user.id,
+            channel: CHANNEL_LOGIN,
+            startedAt: now,
+          },
+        });
+      }
+    }
+
+    console.log(`📊 Sessões de chat atualizadas (${chatters.length})`);
   } catch (err) {
-    console.error("Erro no polling do chat", err)
+    console.error("❌ Erro no polling do chat", err);
+  } finally {
+    isPolling = false;
   }
 }
