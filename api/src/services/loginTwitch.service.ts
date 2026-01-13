@@ -1,4 +1,4 @@
-import prisma from "../lib/prisma.js";
+import { prisma } from "../lib/prisma.js";
 import { exchangeCodeForToken, fetchTwitchUser } from "../clients/twitch.client.js";
 
 export async function loginTwitchService(code: string) {

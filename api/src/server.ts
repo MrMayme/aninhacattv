@@ -31,12 +31,4 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(routes);
 
-// 🚨 Não usamos app.listen() porque Vercel Serverless Functions não precisam
-// exportamos o app como default para usar nas routes
 export default app;
-
-// ⏱️ Polling manual: não rodam globalmente no serverless, use cron job
-// se quiser teste local, descomente:
-// setInterval(() => {
-//   initChatPollingIfLive()
-// }, 5 * 60_000)

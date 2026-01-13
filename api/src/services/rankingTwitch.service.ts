@@ -1,4 +1,4 @@
-import prisma from "../lib/prisma.js";
+import { prisma } from "../lib/prisma.js";
 import type { RankingDTO } from "../dtos/ranking.dto.js";
 
 const MIN_MINUTES = 5;

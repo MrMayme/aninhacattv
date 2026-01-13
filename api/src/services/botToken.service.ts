@@ -1,4 +1,4 @@
-import prisma from "../lib/prisma.js"
+import { prisma } from "../lib/prisma.js"
 import { refreshTwitchToken } from "../clients/twitch.client.js"
 
 const EXPIRATION_MARGIN_MS = 5 * 60 * 1000
