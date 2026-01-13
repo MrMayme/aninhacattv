@@ -1,6 +1,6 @@
 import type { Request, Response } from "express"
 import { exchangeCodeForToken, fetchTwitchUser } from "../clients/twitch.client.js";
-import prisma from "../lib/prisma.js"
+import { prisma } from "../lib/prisma.js"
 
 export async function botCallbackController(req: Request, res: Response) {
   const code = req.query.code as string

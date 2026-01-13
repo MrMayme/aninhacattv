@@ -1,68 +1,10 @@
 import axios from "axios";
-import prisma from "../lib/prisma.js";
-import { isChannelLive } from "../services/twitchStatus.service.js"
-import { getValidBotToken } from "../services/botToken.service.js"
+import { prisma } from "../lib/prisma.js";
+import { getValidBotToken } from "../services/botToken.service.js";
 
 const CHANNEL_LOGIN = "aninhacattv";
 
-// 🔑 controle REAL do polling
-let chatPollingInterval: NodeJS.Timeout | null = null;
-
-// 🔒 evita overlap de execução
-let isPolling = false;
-
-export async function initChatPollingIfLive() {
-  const isLive = await isChannelLive(CHANNEL_LOGIN);
-
-  if (isLive) {
-    startChatPolling();
-  } else {
-    await stopChatPolling();
-  }
-}
-
-function startChatPolling() {
-  if (chatPollingInterval) return; // já está rodando
-
-  console.log("🔴 Canal AO VIVO — iniciando chat polling");
-
-  // 🚀 primeira execução imediata
-  pollChatters();
-
-  chatPollingInterval = setInterval(
-    pollChatters,
-    5 * 60_000 // 5 minutos
-  );
-}
-
-async function stopChatPolling() {
-  if (!chatPollingInterval) return;
-
-  console.log("⚫ Canal OFFLINE — polling pausado");
-
-  clearInterval(chatPollingInterval);
-  chatPollingInterval = null;
-
-  // 🔚 encerra todas as sessões abertas
-  await prisma.chatSession.updateMany({
-    where: {
-      channel: CHANNEL_LOGIN,
-      endedAt: null,
-    },
-    data: {
-      endedAt: new Date(),
-    },
-  });
-}
-
-async function pollChatters() {
-  if (isPolling) {
-    console.warn("⏳ Poll ainda em execução, pulando ciclo...");
-    return;
-  }
-
-  isPolling = true;
-
+export async function pollChattersHandler() {
   try {
     const accessToken = await getValidBotToken();
 
@@ -84,37 +26,21 @@ async function pollChatters() {
     const now = new Date();
     const chatters = res.data.data;
 
-    /**
-     * 1️⃣ Quem está no chat agora
-     */
-    const currentLogins = new Set(
-      chatters.map((c: any) => c.user_login)
-    );
+    // 🔑 Quem está no chat agora
+    const currentLogins = new Set(chatters.map((c: any) => c.user_login));
 
-    /**
-     * 2️⃣ Sessões ativas no banco
-     */
+    // 🔑 Sessões ativas
     const activeSessions = await prisma.chatSession.findMany({
       where: {
         channel: CHANNEL_LOGIN,
         endedAt: null,
       },
-      include: {
-        user: {
-          select: {
-            username: true,
-          },
-        },
-      },
+      include: { user: { select: { username: true } } },
     });
 
-    const activeMap = new Map(
-      activeSessions.map(s => [s.user.username, s])
-    );
+    const activeMap = new Map(activeSessions.map(s => [s.user.username, s]));
 
-    /**
-     * 3️⃣ Usuários que SAÍRAM do chat → fechar sessão
-     */
+    // 🔹 Fechar sessões de quem saiu do chat
     for (const session of activeSessions) {
       if (!currentLogins.has(session.user.username)) {
         await prisma.chatSession.update({
@@ -124,18 +50,12 @@ async function pollChatters() {
       }
     }
 
-    /**
-     * 4️⃣ Usuários que ENTRARAM no chat → nova sessão
-     */
+    // 🔹 Criar sessões para quem entrou no chat
     for (const chatter of chatters) {
       if (!activeMap.has(chatter.user_login)) {
         const user = await prisma.user.upsert({
-          where: {
-            twitchId: chatter.user_id, // 🔑 fixo
-          },
-          update: {
-            username: chatter.user_login, // 🔄 atualiza se mudou
-          },
+          where: { twitchId: chatter.user_id },
+          update: { username: chatter.user_login },
           create: {
             twitchId: chatter.user_id,
             username: chatter.user_login,
@@ -155,7 +75,5 @@ async function pollChatters() {
     console.log(`📊 Sessões de chat atualizadas (${chatters.length})`);
   } catch (err) {
     console.error("❌ Erro no polling do chat", err);
-  } finally {
-    isPolling = false;
   }
 }

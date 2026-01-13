@@ -2,11 +2,8 @@ import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
 import routes from "./routes/index.js";
-import { initChatPollingIfLive } from "./jobs/pollChatters.js";
 
 const app = express();
-
-const PORT = process.env.PORT || 3000;
 
 // CORS Configuration
 app.use((req, res, next) => {
@@ -25,9 +22,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
 
   next();
 });
@@ -36,11 +31,12 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(routes);
 
+// 🚨 Não usamos app.listen() porque Vercel Serverless Functions não precisam
+// exportamos o app como default para usar nas routes
+export default app;
 
-/*app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});*/
-
-setInterval(() => {
-  initChatPollingIfLive()
-}, 5 * 60_000)
+// ⏱️ Polling manual: não rodam globalmente no serverless, use cron job
+// se quiser teste local, descomente:
+// setInterval(() => {
+//   initChatPollingIfLive()
+// }, 5 * 60_000)
