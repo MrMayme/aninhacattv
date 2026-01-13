@@ -9,7 +9,6 @@ const CHANNEL_LOGIN = "aninhacattv";
 let chatPollingInterval: NodeJS.Timeout | null = null;
 
 // 🔒 evita overlap de execução
-let shouldPoll = false;
 let isPolling = false;
 
 export async function initChatPollingIfLive() {
@@ -27,8 +26,6 @@ function startChatPolling() {
 
   console.log("🔴 Canal AO VIVO — iniciando chat polling");
 
-  shouldPoll = true;
-
   // 🚀 primeira execução imediata
   pollChatters();
 
@@ -42,8 +39,6 @@ async function stopChatPolling() {
   if (!chatPollingInterval) return;
 
   console.log("⚫ Canal OFFLINE — polling pausado");
-
-  shouldPoll = false;
 
   clearInterval(chatPollingInterval);
   chatPollingInterval = null;
@@ -61,20 +56,16 @@ async function stopChatPolling() {
 }
 
 async function pollChatters() {
-  if (!shouldPoll) {
-    console.log("⛔ Poll cancelado antes de iniciar");
+  if (isPolling) {
+    console.warn("⏳ Poll ainda em execução, pulando ciclo...");
     return;
   }
-
-  if (isPolling) return;
 
   isPolling = true;
 
   try {
     const accessToken = await getValidBotToken();
-    
-    if (!shouldPoll) return;
-    
+
     const res = await axios.get(
       "https://api.twitch.tv/helix/chat/chatters",
       {
@@ -89,8 +80,6 @@ async function pollChatters() {
         },
       }
     );
-    
-    if (!shouldPoll) return;
 
     const now = new Date();
     const chatters = res.data.data;

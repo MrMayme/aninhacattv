@@ -8,6 +8,6 @@ const router = Router();
 router.get("/twitch", redirectToTwitchController)
 router.get("/twitch/callback", loginTwitchController)
 
-router.get("/ranking", rankingTwitchController)
+router.get("/live", rankingTwitchController)
 
 export default router;

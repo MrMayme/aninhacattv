@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Cabeça do gatinho -->
+  <circle cx="50" cy="50" r="40" fill="#FF9F5A"/>
+  
+  <!-- Orelhas -->
+  <polygon points="20,15 25,35 15,30" fill="#FF9F5A"/>
+  <polygon points="80,15 75,35 85,30" fill="#FF9F5A"/>
+  <polygon points="22,22 23,32 18,28" fill="#FFB380"/>
+  <polygon points="78,22 77,32 82,28" fill="#FFB380"/>
+  
+  <!-- Olhos -->
+  <circle cx="35" cy="40" r="5" fill="#000"/>
+  <circle cx="65" cy="40" r="5" fill="#000"/>
+  <circle cx="36" cy="38" r="2" fill="#FFF"/>
+  <circle cx="66" cy="38" r="2" fill="#FFF"/>
+  
+  <!-- Nariz -->
+  <path d="M 50 50 L 48 58 L 52 58 Z" fill="#FF69B4"/>
+  
+  <!-- Boca -->
+  <path d="M 50 58 Q 42 65 35 62" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M 50 58 Q 58 65 65 62" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+  
+  <!-- Bigodes -->
+  <line x1="25" y1="50" x2="10" y2="48" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="25" y1="55" x2="10" y2="58" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="75" y1="50" x2="90" y2="48" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="75" y1="55" x2="90" y2="58" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
