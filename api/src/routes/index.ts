@@ -5,7 +5,7 @@ import botRoutes from './bot.routes.js'
 
 const router = Router()
 
-router.use('/api', apiRoutes)
+router.use('/oi', apiRoutes)
 router.use('/auth', authRoutes)
 router.use('/bot', botRoutes)
 
