@@ -4,10 +4,6 @@
     {
       "src": "src/server.ts",
       "use": "@vercel/node"
-    },
-    {
-      "src": "poll-chatters.ts",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
