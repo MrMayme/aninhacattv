@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import apiRoutes from './api.routes.js'
+import apiRoutes from './oi.routes.js'
 import authRoutes from './auth.routes.js'
 import botRoutes from './bot.routes.js'
 
