@@ -41,6 +41,7 @@ async function fetchRankingByPeriod(period: 'mensal' | 'anual' | 'all'): Promise
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': 'true',
     },
   });
 
