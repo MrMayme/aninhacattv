@@ -80,7 +80,9 @@ export default function RankingContent() {
         {!loading && remaining.length > 0 && (
           <section>
             <h2 className="text-xl font-bold text-gray-800 mb-4">Mais Rankings</h2>
-            <RankingList users={remaining} />
+            <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+              <RankingList users={remaining} />
+            </div>
           </section>
         )}
 
