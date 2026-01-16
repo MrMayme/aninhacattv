@@ -13,7 +13,7 @@ interface ApiUser {
 
 interface RankingUser {
   nick: string;
-  horas: number;
+  minutes: number;
   avatar?: string;
 }
 
@@ -23,17 +23,22 @@ interface RankingData {
   all: RankingUser[];
 }
 
+export function formatarTempo(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = Math.floor(minutes % 60);
+  return `${h}h ${m}m`;
+}
+
 function normalizeUserData(user: ApiUser): RankingUser {
   // Mapear user → nick (pode vir como 'user', 'username', ou 'nick')
   const nick = user.nick || user.username || user.user || 'Unknown';
   
-  // Converter minutos para horas (backend retorna minutos)
+  // Manter minutos originais
   const minutes = user.minutes || 0;
-  const horas = Math.round(minutes / 60);
   
   const avatar = user.avatar;
 
-  return { nick, horas, avatar };
+  return { nick, minutes, avatar };
 }
 
 async function fetchRankingByPeriod(period: 'mensal' | 'anual' | 'all'): Promise<RankingUser[]> {
@@ -55,7 +60,7 @@ async function fetchRankingByPeriod(period: 'mensal' | 'anual' | 'all'): Promise
     ? rawData.map(normalizeUserData)
     : rawData.users?.map(normalizeUserData) || [];
 
-  users.sort((a, b) => b.horas - a.horas);
+  users.sort((a, b) => b.minutes - a.minutes);
   return users;
 }
 

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { RankingUser } from '@/app/types/ranking';
+import { formatarTempo } from '@/app/lib/api';
 
 interface RankingListProps {
   users: RankingUser[];
@@ -32,7 +33,7 @@ export default function RankingList({ users }: RankingListProps) {
             </span>
           </div>
           <div className="text-right font-semibold text-gray-800">
-            {user.horas}h
+            {formatarTempo(user.minutes)}
           </div>
         </div>
       ))}

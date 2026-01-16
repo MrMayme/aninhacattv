@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { RankingUser } from '@/app/types/ranking';
+import { formatarTempo } from '@/app/lib/api';
 
 interface RankingCardProps {
   user: RankingUser;
@@ -32,7 +33,7 @@ export default function RankingCard({ user, position }: RankingCardProps) {
         {MEDALS[position]} {user.nick}
       </div>
       <div className="text-gray-600 text-sm">
-        {user.horas}h assistidas
+        {formatarTempo(user.minutes)}
       </div>
     </div>
   );

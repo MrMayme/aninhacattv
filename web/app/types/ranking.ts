@@ -1,6 +1,6 @@
 export interface RankingUser {
   nick: string;
-  horas: number;
+  minutes: number;
   avatar?: string;
 }
 
