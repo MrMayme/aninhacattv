@@ -2,12 +2,15 @@ import Image from 'next/image';
 import { RankingUser, RankingType } from '@/app/types/ranking';
 import { formatarTempo, formatarMensagens } from '@/app/lib/api';
 
+import { TimePeriod } from '@/app/types/ranking';
+
 interface RankingListProps {
   users: RankingUser[];
   type: RankingType;
+  activeTab: TimePeriod;
 }
 
-export default function RankingList({ users, type }: RankingListProps) {
+export default function RankingList({ users, type, activeTab }: RankingListProps) {
   const getMetricDisplay = (user: RankingUser) => {
     switch (type) {
       case 'hours':
@@ -47,7 +50,7 @@ export default function RankingList({ users, type }: RankingListProps) {
     <div className="space-y-3 mt-8">
       {users.map((user, index) => (
         <div
-          key={`${user.nick}-${index}`}
+          key={`${activeTab}-${type}-${user.nick}-${index}`}
           className={`grid ${getColumnGrid()} items-center gap-4 bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow`}
         >
           <div className="font-bold text-lg text-gray-800 text-center">

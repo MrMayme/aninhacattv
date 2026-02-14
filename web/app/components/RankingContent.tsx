@@ -71,7 +71,7 @@ export default function RankingContent() {
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {top3.map((user, index) => (
               <RankingCard
-                key={`${user.nick}-${index}`}
+                key={`${activeTab}-${activeType}-${user.nick}-${index}`}
                 user={user}
                 position={index as 0 | 1 | 2}
                 type={activeType}
@@ -84,7 +84,7 @@ export default function RankingContent() {
           <section>
             <h2 className="text-xl font-bold text-gray-800 mb-4">Mais Rankings</h2>
             <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
-              <RankingList users={remaining} type={activeType} />
+              <RankingList users={remaining} type={activeType} activeTab={activeTab} />
             </div>
           </section>
         )}
