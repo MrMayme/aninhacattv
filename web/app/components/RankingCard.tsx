@@ -54,7 +54,7 @@ export default function RankingCard({ user, position, type }: RankingCardProps) 
           alt={user.nick}
           width={72}
           height={72}
-          unoptimized={!user.avatar}
+          unoptimized={true}
           className="rounded-full object-cover w-full h-full"
         />
       </div>

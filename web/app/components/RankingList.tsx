@@ -63,7 +63,7 @@ export default function RankingList({ users, type, activeTab }: RankingListProps
                 alt={user.nick}
                 width={40}
                 height={40}
-                unoptimized={!user.avatar}
+                unoptimized={true}
                 className="rounded-full object-cover w-full h-full"
               />
             </div>
