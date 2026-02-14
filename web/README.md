@@ -93,10 +93,10 @@ O projeto consome a rota `/auth/live` do backend com suporte a filtros por perí
 ### Endpoints
 
 ```bash
-GET /auth/live?period=mensal   # Últimos 30 dias
-GET /auth/live?period=anual    # Últimos 365 dias
-GET /auth/live?period=all      # Todos os tempos (padrão)
-GET /auth/live                 # Todos os tempos
+GET /ranking/hour?period=mensal   # Últimos 30 dias
+GET /ranking/hour?period=anual    # Últimos 365 dias
+GET /ranking/hour?period=all      # Todos os tempos (padrão)
+GET /ranking/hour                 # Todos os tempos
 ```
 
 ### Resposta Esperada

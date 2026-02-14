@@ -42,7 +42,7 @@ function normalizeUserData(user: ApiUser): RankingUser {
 }
 
 async function fetchRankingByPeriod(period: 'mensal' | 'anual' | 'all'): Promise<RankingUser[]> {
-  const response = await fetch(`${API_URL}/auth/live?period=${period}`, {
+  const response = await fetch(`${API_URL}/ranking/hour?period=${period}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
