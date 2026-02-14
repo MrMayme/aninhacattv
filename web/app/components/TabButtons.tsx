@@ -13,12 +13,12 @@ export default function TabButtons({ activeTab, onTabChange }: TabButtonsProps) 
   ];
 
   return (
-    <div className="flex justify-center gap-4 my-8 flex-wrap px-6">
+    <div className="flex justify-center gap-6 my-8 flex-wrap px-6 mb-10">
       {tabs.map((tab) => (
         <button
           key={tab.value}
           onClick={() => onTabChange(tab.value)}
-          className={`px-6 py-3 rounded-full font-semibold transition-all ${
+          className={`px-7 py-3 rounded-full font-semibold transition-all ${
             activeTab === tab.value
               ? 'bg-pink-500 text-white'
               : 'bg-white text-gray-800 hover:bg-gray-100'

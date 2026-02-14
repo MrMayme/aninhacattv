@@ -3,17 +3,19 @@
 import { useState, useEffect } from 'react';
 import RankingCard from './RankingCard';
 import RankingList from './RankingList';
-import TabButtons from './TabButtons';
-import { RankingUser, TimePeriod, RankingData } from '@/app/types/ranking';
+import RankingTypeButtons from './RankingTypeButtons';
+import PeriodFilter from './PeriodFilter';
+import { RankingUser, TimePeriod, RankingData, RankingType } from '@/app/types/ranking';
 import { fetchRanking } from '@/app/lib/api';
 
 export default function RankingContent() {
   const [data, setData] = useState<RankingData>({
-    mensal: [],
-    anual: [],
-    all: [],
+    hours: { mensal: [], anual: [], all: [] },
+    messages: { mensal: [], anual: [], all: [] },
+    total: { mensal: [], anual: [], all: [] },
   });
   const [activeTab, setActiveTab] = useState<TimePeriod>('mensal');
+  const [activeType, setActiveType] = useState<RankingType>('hours');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,14 +29,10 @@ export default function RankingContent() {
       } catch (err) {
         console.error(err);
         setError('Erro ao carregar ranking');
-        // Usar dados de exemplo em caso de erro
         setData({
-          mensal: [
-          ],
-          anual: [
-          ],
-          all: [
-          ],
+          hours: { mensal: [], anual: [], all: [] },
+          messages: { mensal: [], anual: [], all: [] },
+          total: { mensal: [], anual: [], all: [] },
         });
       } finally {
         setLoading(false);
@@ -44,13 +42,17 @@ export default function RankingContent() {
     loadRanking();
   }, []);
 
-  const currentRanking = data[activeTab] || [];
+  const currentRanking = data[activeType][activeTab] || [];
   const top3 = currentRanking.slice(0, 3);
   const remaining = currentRanking.slice(3);
 
   return (
     <>
-      <TabButtons activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Tabs principais - Tipo de Ranking (Horas, Mensagens, Total) */}
+      <RankingTypeButtons activeType={activeType} onTypeChange={setActiveType} />
+
+      {/* Filtro secundário - Período (Mensal, Anual, Todos os tempos) */}
+      <PeriodFilter activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="max-w-5xl mx-auto px-6 pb-16">
         {loading && (
@@ -72,6 +74,7 @@ export default function RankingContent() {
                 key={`${user.nick}-${index}`}
                 user={user}
                 position={index as 0 | 1 | 2}
+                type={activeType}
               />
             ))}
           </section>
@@ -81,7 +84,7 @@ export default function RankingContent() {
           <section>
             <h2 className="text-xl font-bold text-gray-800 mb-4">Mais Rankings</h2>
             <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
-              <RankingList users={remaining} />
+              <RankingList users={remaining} type={activeType} />
             </div>
           </section>
         )}

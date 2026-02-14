@@ -1,16 +1,45 @@
 import Image from 'next/image';
-import { RankingUser } from '@/app/types/ranking';
-import { formatarTempo } from '@/app/lib/api';
+import { RankingUser, RankingType } from '@/app/types/ranking';
+import { formatarTempo, formatarMensagens } from '@/app/lib/api';
 
 interface RankingCardProps {
   user: RankingUser;
   position: 0 | 1 | 2;
+  type: RankingType;
 }
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 const MEDAL_COLORS = ['border-yellow-400', '', ''];
 
-export default function RankingCard({ user, position }: RankingCardProps) {
+export default function RankingCard({ user, position, type }: RankingCardProps) {
+  const getMetricDisplay = () => {
+    switch (type) {
+      case 'hours':
+        return (
+          <div className="text-gray-600 text-sm">
+            {formatarTempo(user.minutes || 0)}
+          </div>
+        );
+      case 'messages':
+        return (
+          <div className="text-gray-600 text-sm">
+            {formatarMensagens(user.messages || 0)} mensagens
+          </div>
+        );
+      case 'total':
+        return (
+          <div className="space-y-1">
+            <div className="text-lg font-bold text-purple-600">
+              {(user.score || 0).toLocaleString('pt-BR')} <span className="text-sm text-gray-500">pts</span>
+            </div>
+            <div className="text-xs text-gray-500">
+              {formatarTempo(user.minutes || 0)} • {formatarMensagens(user.messages || 0)} msg
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
     <div
       className={`
@@ -29,12 +58,10 @@ export default function RankingCard({ user, position }: RankingCardProps) {
           className="rounded-full object-cover w-full h-full"
         />
       </div>
-      <div className="font-bold text-lg mb-1">
+      <div className="font-bold text-lg mb-2">
         {MEDALS[position]} {user.nick}
       </div>
-      <div className="text-gray-600 text-sm">
-        {formatarTempo(user.minutes)}
-      </div>
+      {getMetricDisplay()}
     </div>
   );
 }

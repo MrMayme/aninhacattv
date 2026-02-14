@@ -1,18 +1,54 @@
 import Image from 'next/image';
-import { RankingUser } from '@/app/types/ranking';
-import { formatarTempo } from '@/app/lib/api';
+import { RankingUser, RankingType } from '@/app/types/ranking';
+import { formatarTempo, formatarMensagens } from '@/app/lib/api';
 
 interface RankingListProps {
   users: RankingUser[];
+  type: RankingType;
 }
 
-export default function RankingList({ users }: RankingListProps) {
+export default function RankingList({ users, type }: RankingListProps) {
+  const getMetricDisplay = (user: RankingUser) => {
+    switch (type) {
+      case 'hours':
+        return (
+          <div className="text-right font-semibold text-gray-800">
+            {formatarTempo(user.minutes || 0)}
+          </div>
+        );
+      case 'messages':
+        return (
+          <div className="text-right font-semibold text-gray-800">
+            {formatarMensagens(user.messages || 0)}
+          </div>
+        );
+      case 'total':
+        return (
+          <div className="text-right">
+            <div className="font-bold text-purple-600">
+              {(user.score || 0).toLocaleString('pt-BR')} <span className="text-xs text-gray-500">pts</span>
+            </div>
+            <div className="text-xs text-gray-500">
+              {formatarTempo(user.minutes || 0)}
+            </div>
+          </div>
+        );
+    }
+  };
+
+  const getColumnGrid = () => {
+    if (type === 'total') {
+      return 'grid-cols-[40px_1fr_120px]';
+    }
+    return 'grid-cols-[40px_1fr_100px]';
+  };
+
   return (
     <div className="space-y-3 mt-8">
       {users.map((user, index) => (
         <div
           key={`${user.nick}-${index}`}
-          className="grid grid-cols-[40px_1fr_100px] items-center gap-4 bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow"
+          className={`grid ${getColumnGrid()} items-center gap-4 bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow`}
         >
           <div className="font-bold text-lg text-gray-800 text-center">
             {index + 4}
@@ -32,9 +68,7 @@ export default function RankingList({ users }: RankingListProps) {
               {user.nick}
             </span>
           </div>
-          <div className="text-right font-semibold text-gray-800">
-            {formatarTempo(user.minutes)}
-          </div>
+          {getMetricDisplay(user)}
         </div>
       ))}
     </div>
