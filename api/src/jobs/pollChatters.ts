@@ -109,32 +109,6 @@ async function stopChatPolling() {
 
 }
 
-async function fetchAvatarIfNeeded(
-  tx: any,
-  twitchId: string,
-  accessToken: string
-): Promise<string | undefined> {
-  const user = await tx.user.findUnique({
-    where: { twitchId },
-    select: { avatar: true },
-  });
-
-  if (user?.avatar) return undefined;
-
-  const res = await axios.get(
-    "https://api.twitch.tv/helix/users",
-    {
-      params: { id: twitchId },
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Client-Id": process.env.TWITCH_CLIENT_ID!,
-      },
-    }
-  );
-
-  return res.data.data[0]?.profile_image_url;
-}
-
 async function pollChatters() {
   if (!shouldPoll) {
     console.log("⛔ Poll cancelado antes de iniciar");
