@@ -1,12 +1,12 @@
-import { prisma } from "../lib/prisma.js";
+import prisma from "../lib/prisma.js";
 import { exchangeCodeForToken, fetchTwitchUser } from "../clients/twitch.client.js";
 
 export async function loginTwitchService(code: string) {
 
   const { access_token, refresh_token, expires_in } = await exchangeCodeForToken(code);
-  console.log("access_token: ", access_token)
+  
   const twitchUser = await fetchTwitchUser(access_token);
-  console.log("twitchUser: ", twitchUser)
+  
   const user = await prisma.user.upsert({
     where: { twitchId: twitchUser.id },
     update: {
@@ -22,7 +22,6 @@ export async function loginTwitchService(code: string) {
     },
   });
 
-  console.log("user: ", user)
   await prisma.twitchToken.upsert({
     where: { userId: user.id },
     update: {
@@ -43,6 +42,5 @@ export async function loginTwitchService(code: string) {
       userId: user.id,
     },
   });
-  console.log("log: ", log)
   
 }

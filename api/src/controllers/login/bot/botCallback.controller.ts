@@ -1,6 +1,8 @@
 import type { Request, Response } from "express"
-import { exchangeCodeForToken, fetchTwitchUser } from "../clients/twitch.client.js";
-import { prisma } from "../lib/prisma.js"
+import { exchangeCodeForToken, fetchTwitchUser } from "../../../clients/twitch.client.js";
+import prisma from "../../../lib/prisma.js"
+import { TwitchTokenType } from "../../../enum/TwitchTokenType.js";
+
 
 export async function botCallbackController(req: Request, res: Response) {
   const code = req.query.code as string
@@ -34,12 +36,14 @@ export async function botCallbackController(req: Request, res: Response) {
       accessToken: access_token,
       refreshToken: refresh_token,
       expiresAt: new Date(Date.now() + expires_in * 1000),
+      type: (botUser.id == process.env.BROADCASTER_ID) ? TwitchTokenType.BROADCASTER : TwitchTokenType.BOT,      
     },
     create: {
       userId: user.id,
       accessToken: access_token,
       refreshToken: refresh_token,
       expiresAt: new Date(Date.now() + expires_in * 1000),
+      type: (botUser.id == process.env.BROADCASTER_ID) ? TwitchTokenType.BROADCASTER : TwitchTokenType.BOT,
     },
   })
 

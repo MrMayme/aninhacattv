@@ -1,14 +1,12 @@
 import type { Request, Response, NextFunction } from "express"
-import { loginTwitchService } from "../services/loginTwitch.service.js"
+import { loginTwitchService } from "../../../services/loginTwitch.service.js"
 
 export async function loginTwitchController(req: Request, res: Response, next: NextFunction) {
   try {
     const code = req.query.code as string | undefined
     const state = req.query.state as string | undefined
     const savedState = req.cookies.oauth_state
-    console.log("n-code: ", code)
-    console.log("n-state: ", state)
-    console.log("n-savedState: ", savedState)
+    
     if (!code || !state) {
       return res.status(400).json({ error: "Code ou state ausente" })
     }

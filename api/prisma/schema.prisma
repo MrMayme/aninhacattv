@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider       = "postgresql"
-  url            = env("DATABASE_URL")
-  directUrl      = env("DATABASE_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -20,6 +19,8 @@ model User {
   logins        LoginHistory[]
   twitchToken   TwitchToken?
   chatSessions  ChatSession[]
+
+  @@map("user")  // Nome da tabela em minúsculas
 }
 
 model LoginHistory {
@@ -32,17 +33,28 @@ model LoginHistory {
   user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
+
+  @@map("loginhistory")  // Nome da tabela em minúsculas
+}
+
+enum TwitchTokenType {
+  BROADCASTER
+  BOT
+  USER
 }
 
 model TwitchToken {
   id           String   @id @default(cuid())
   userId       String   @unique
+  type         TwitchTokenType @unique
   accessToken  String
   refreshToken String
   expiresAt    DateTime
   createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+
+  @@map("twitchtoken")  // Nome da tabela em minúsculas
 }
 
 model ChatSession {
@@ -52,10 +64,13 @@ model ChatSession {
 
   startedAt DateTime
   endedAt   DateTime? // null = sessão ativa
+  messageCount Int      @default(0)
 
   user User @relation(fields: [userId], references: [id])
 
   @@index([channel])
   @@index([userId])
   @@index([channel, endedAt])
+
+  @@map("chatsession")  // Nome da tabela em minúsculas
 }

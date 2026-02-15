@@ -1,13 +1,11 @@
 import { Router } from "express";
-import { rankingTwitchController } from "../controllers/rankingTwitch.controller.js";
-import { loginTwitchController } from "../controllers/loginTwitch.controller.js";
-import { redirectToTwitchController } from "../controllers/redirectToTwitch.controller.js";
+import { loginTwitchController } from "../controllers/login/user/loginTwitch.controller.js";
+import { redirectToTwitchController } from "../controllers/login/user/redirectToTwitch.controller.js";
+import { rankingRateLimit } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.get("/twitch", redirectToTwitchController)
-router.get("/twitch/callback", loginTwitchController)
-
-router.get("/live", rankingTwitchController)
+//router.get("/twitch", redirectToTwitchController)
+//router.get("/twitch/callback", loginTwitchController)
 
 export default router;

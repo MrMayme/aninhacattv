@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { redirectBotToTwitchController } from "../controllers/redirectBotToTwitch.controller.js";
-import { botCallbackController } from "../controllers/botCallback.controller.js";
+import { redirectBotToTwitchController } from "../controllers/login/bot/redirectBotToTwitch.controller.js";
+import { botCallbackController } from "../controllers/login/bot/botCallback.controller.js";
 
 const router = Router();
 

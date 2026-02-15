@@ -1,7 +1,14 @@
-import { prisma } from "../lib/prisma.js";
-import type { RankingDTO } from "../dtos/ranking.dto.js";
+import prisma from "../../lib/prisma.js";
+import type { RankingHourDTO } from "../../dtos/ranking.dto.js";
 
 const MIN_MINUTES = 5;
+
+const excludedUserIds = [
+  "cmk89ic30000fx4r4nx86vza1", // streamelements
+  "cmk89ic3s000lx4r4ycf0ktcp", // botrix
+  "cmk89ic45000ox4r49400omqu", // creatisbot
+  "cmk89ic3e000ix4r4tklehniz", // aninhacattv
+];
 
 function calculateMinutes(start: Date, end: Date): number {
   const diff = end.getTime() - start.getTime();
@@ -36,10 +43,10 @@ function getDateRangeForPeriod(period: string): { startDate: Date; endDate: Date
   return { startDate, endDate };
 }
 
-export async function getTwitchRankingService(
+export async function getTwitchHourRankingService(
   channel: string,
   period: string = "all"
-): Promise<RankingDTO[]> {
+): Promise<RankingHourDTO[]> {
   const now = new Date();
   const { startDate } = getDateRangeForPeriod(period);
 
@@ -52,6 +59,13 @@ export async function getTwitchRankingService(
       startedAt: {
         gte: startDate,
       },
+      NOT: {
+      user: {
+        id: {
+          in: excludedUserIds,
+        },
+      },
+    },
     },
     include: {
       user: {
@@ -85,7 +99,7 @@ export async function getTwitchRankingService(
   /**
    * 3️⃣ Converter para RankingDTO com avatar
    */
-  const ranking: RankingDTO[] = Array.from(minutesByUser.entries())
+  const ranking: RankingHourDTO[] = Array.from(minutesByUser.entries())
     .map(([user, minutes]) => {
       const avatar = avatarByUser.get(user);
       return {
@@ -99,15 +113,3 @@ export async function getTwitchRankingService(
 
   return ranking;
 }
-
-/**
- * function loginDuranteALive(
-  loginAt: Date,
-  presence: { firstSeen: Date; lastSeen: Date }
-) {
-  return (
-    loginAt >= presence.firstSeen &&
-    loginAt <= presence.lastSeen
-  );
-}
- */
