@@ -1,5 +1,9 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// Cache para armazenar dados já carregados
+const rankingCache = new Map<string, RankingUser[]>();
+const loadingPromises = new Map<string, Promise<RankingUser[]>>();
+
 interface ApiUser {
   user?: string;
   username?: string;
@@ -62,45 +66,98 @@ function normalizeUserData(user: ApiUser, type: 'hours' | 'messages' | 'total'):
   return normalized;
 }
 
+function getCacheKey(period: 'mensal' | 'anual' | 'all', type: 'hours' | 'messages' | 'total'): string {
+  return `${type}:${period}`;
+}
+
 async function fetchRankingByPeriod(
   period: 'mensal' | 'anual' | 'all',
   type: 'hours' | 'messages' | 'total'
 ): Promise<RankingUser[]> {
+  const cacheKey = getCacheKey(period, type);
+  
+  // Retorna do cache se já foi carregado
+  if (rankingCache.has(cacheKey)) {
+    return rankingCache.get(cacheKey)!;
+  }
+  
+  // Evita requisições duplicadas retornando a promise já em andamento
+  if (loadingPromises.has(cacheKey)) {
+    return loadingPromises.get(cacheKey)!;
+  }
+
   const endpoints = {
     hours: 'hour',
     messages: 'chat',
     total: 'hourandchat',
   };
 
-  const endpoint = endpoints[type];
-  const response = await fetch(`${API_URL}/ranking/${endpoint}?period=${period}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'ngrok-skip-browser-warning': 'true',
-    },
-  });
+  const promise = (async () => {
+    try {
+      const endpoint = endpoints[type];
+      const response = await fetch(`${API_URL}/ranking/${endpoint}?period=${period}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
+      });
 
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.statusText}`);
+      }
+
+      const rawData = await response.json();
+
+      const users: RankingUser[] = Array.isArray(rawData)
+        ? rawData.map((user) => normalizeUserData(user, type))
+        : rawData.users?.map((user: ApiUser) => normalizeUserData(user, type)) || [];
+
+      // Sort based on ranking type
+      if (type === 'hours') {
+        users.sort((a, b) => (b.minutes || 0) - (a.minutes || 0));
+      } else if (type === 'messages') {
+        users.sort((a, b) => (b.messages || 0) - (a.messages || 0));
+      } else {
+        users.sort((a, b) => (b.score || 0) - (a.score || 0));
+      }
+
+      // Armazena no cache
+      rankingCache.set(cacheKey, users);
+      loadingPromises.delete(cacheKey);
+      
+      return users;
+    } catch (error) {
+      loadingPromises.delete(cacheKey);
+      throw error;
+    }
+  })();
+  
+  loadingPromises.set(cacheKey, promise);
+  return promise;
+}
+
+// Carrega inicial apenas o tipo "total" com período "mensal"
+export async function fetchInitialRanking(): Promise<RankingUser[]> {
+  try {
+    return await fetchRankingByPeriod('mensal', 'total');
+  } catch (error) {
+    console.error('Erro ao carregar ranking inicial:', error);
+    throw error;
   }
+}
 
-  const rawData = await response.json();
-
-  const users: RankingUser[] = Array.isArray(rawData)
-    ? rawData.map((user) => normalizeUserData(user, type))
-    : rawData.users?.map((user: ApiUser) => normalizeUserData(user, type)) || [];
-
-  // Sort based on ranking type
-  if (type === 'hours') {
-    users.sort((a, b) => (b.minutes || 0) - (a.minutes || 0));
-  } else if (type === 'messages') {
-    users.sort((a, b) => (b.messages || 0) - (a.messages || 0));
-  } else {
-    users.sort((a, b) => (b.score || 0) - (a.score || 0));
+// Carrega dados para um tipo e período específicos (lazy loading)
+export async function fetchRankingData(
+  type: 'hours' | 'messages' | 'total',
+  period: 'mensal' | 'anual' | 'all'
+): Promise<RankingUser[]> {
+  try {
+    return await fetchRankingByPeriod(period, type);
+  } catch (error) {
+    console.error(`Erro ao carregar ranking (${type}, ${period}):`, error);
+    throw error;
   }
-
-  return users;
 }
 
 export async function fetchRanking(): Promise<RankingData> {
